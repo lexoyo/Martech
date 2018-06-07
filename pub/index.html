@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="shortcut icon" type="image/png" href="/favicon.png"/>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+</head>
+<body>
+  <main>
+    <section id="login" class="card">
+      <h2>Authorization</h2>
+      <p>You need to authorize me to manage your pages.</p>
+      <button id="loginBtn">Authorize</button>
+    </section>
+    <section id="app">
+      <ul id="tabPagesList"></ul>
+      <p>You can only create tabs on Pages that have 2000 or more fans.</p>
+      <button id="addTabPageBtn">Add a tab page</button>
+      <div id="error" class="card">
+        <p id="statusText"></p>
+      </div>
+    </section>
+  </main>
+  <script type="text/javascript" src="script.js"></script>
+</body>
+</html>
