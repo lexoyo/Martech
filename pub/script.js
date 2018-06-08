@@ -10,12 +10,14 @@
 // Constants and globals
 const ROUTES = {
   tabpage: '/api/tabpage/',
+  user: '/api/user/',
 };
 const FB_LOGIN_OPTIONS = {
   return_scopes: true,
   scope: 'email,manage_pages,publish_pages,pages_messaging,pages_show_list',
 }
 const WEBMASTER_TOOLS_APP_ID = '231667064232503';
+// const WEBMASTER_TOOLS_APP_ID = '168766753791948';
 const TAB_PAGES_APP_ID = '206421073488301';
 const addTabPageBtn = document.querySelector('#addTabPageBtn');
 const loginBtn = document.querySelector('#loginBtn');
@@ -54,8 +56,12 @@ function setState(states, _statusText) {
 }
 
 // UI
+let firstLogin = false;
 loginBtn.onclick = function(e) {
+  firstLogin = true;
   FB.login((response) => {
+    // call after first login to force user id
+    loadData({method: 'POST', url: ROUTES.user, data: {fbUserId: response.authResponse.userID}});
   }, FB_LOGIN_OPTIONS);
 };
 addTabPageBtn.onclick = function(e) {
@@ -81,6 +87,8 @@ function startApp() {
 }
 function refreshTabPageList() {
   getUserPages(function(data, error) {
+    console.log('getUserPages', data, error);
+    if(!data) return;
     userPages = data;
     userPages.forEach(page => {
       getTabs(page.id, page.access_token, (data, error) => {
@@ -110,6 +118,7 @@ function refreshTabPageList() {
           const li = document.createElement('li');
           li.className = 'card';
           li.innerHTML = `
+            <span class="deleteBtn fas fa-times" name="Delete this page tab"></span>
             <h2>Page Tab</h2>
             <form class="body" action="#">
               <div class="name">
@@ -147,9 +156,17 @@ function refreshTabPageList() {
             </form>
           `;
           fragment.appendChild(li);
-          const fbPageSelector = li.querySelector('.fbPageSelector')
-          const form = li.querySelector('.body')
-          const submitBtn = li.querySelector('.submitBtn')
+          const deleteBtn = li.querySelector('.deleteBtn');
+          deleteBtn.onclick = function (e) {
+            const accessToken = fbPageSelector.selectedOptions[0].getAttribute('data-access-token');
+            deleteTabPage(tabPage, accessToken, function (response) {
+              // TODO: handle errors
+              refreshTabPageList();
+            });
+          }
+          const fbPageSelector = li.querySelector('.fbPageSelector');
+          const form = li.querySelector('.body');
+          const submitBtn = li.querySelector('.submitBtn');
           form.addEventListener('click', (e) => setDirty(submitBtn));
           form.addEventListener('change', (e) => setDirty(submitBtn));
           form.addEventListener('blur', (e) => setDirty(submitBtn));
@@ -212,6 +229,20 @@ function attachPageToTab(pageTabData, app_id, cbk) {
     }
   );
 };
+function detachPage(accessToken, fbPageId, app_id, cbk) {
+  // FIXME: should be on the server side
+  FB.api(
+    `/${ fbPageId }/tabs`,
+    'DELETE',
+    {
+      access_token: accessToken,
+      app_id: app_id,
+    },
+    response => {
+      cbk(response);
+    }
+  );
+};
 
 function getUserPages(cbk) {
   FB.api('/me/accounts', function(response) {
@@ -234,6 +265,14 @@ function doSaveTabPage(tabPage, pageTabData, cbk) {
   updateTabPage(tabPage._id, Object.assign({}, pageTabData, {
     fbAppId: TAB_PAGES_APP_ID,
   }), cbk);
+}
+function deleteTabPage(tabPage, accessToken, cbk) {
+  detachPage(accessToken, tabPage.fbPageId, TAB_PAGES_APP_ID, function (response) {
+    doDeleteTabPage(tabPage, cbk);
+  });
+}
+function doDeleteTabPage(tabPage, cbk) {
+  loadData({method: 'DELETE', url: ROUTES.tabpage + tabPage._id}, cbk);
 }
 function updateTabPage(tabPageId, data, cbk) {
   loadData({method: 'POST', url: ROUTES.tabpage + tabPageId, data: data}, cbk);

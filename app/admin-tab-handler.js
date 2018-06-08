@@ -16,10 +16,18 @@ module.exports = {
       }
       next();
     }
+    else if (req.session.fbUserId) {
+      next();
+    }
     else {
       res.write('Not a tab in a Facebook page.');
       res.end();
     }
+  },
+  // called after first login to force user id
+  updateUser: function (req, res, next) {
+    req.session.fbUserId = req.body.fbUserId;
+    res.end();
   },
   post2Get: function (req, res, next) {
     req.method = 'GET'

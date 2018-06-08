@@ -60,7 +60,6 @@ module.exports = {
     pageTabModel.get({
       fbUserId: req.session.fbUserId,
     }).then(pages => {
-      console.log('get page tab:', pages);
       res.json(pages);
       res.end();
     });
@@ -92,6 +91,27 @@ module.exports = {
       else {
         res.status(400);
         res.json('KO');
+      }
+      res.end();
+    });
+  },
+  deleteTabpage: function(req, res) {
+    console.log('deleteTabpage', req.params);
+    pageTabModel.findOneAndRemove({
+      _id: req.params.tabPageId,
+      fbUserId: req.session.fbUserId,
+    }).then((doc, err) => {
+      console.log('delete page tab done with err:', err, doc);
+      if(doc) {
+        res.json('OK');
+      }
+      else if(err) {
+        res.status(400);
+        res.json('KO');
+      }
+      else {
+        res.status(404);
+        res.json('NOT FOUND');
       }
       res.end();
     });
